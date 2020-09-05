@@ -46,7 +46,7 @@ public class TextRecyclerAdapter extends RecyclerView.Adapter {
         }
         public void bind(String s, int position) {
             text.setText(s);
-            textPosition.setText("" + position);
+            textPosition.setText("" + position + "/" + getItemCount());
         }
     }
 }
