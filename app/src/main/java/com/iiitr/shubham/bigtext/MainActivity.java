@@ -6,8 +6,6 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.gson.Gson;
 import com.iiitr.shubham.bigtext.Adapters.TextRecyclerAdapter;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,9 +34,9 @@ public class MainActivity extends AppCompatActivity {
     private String MY_LIST = "MY_LIST";
     private boolean isLongPressed = false;
     private float initTextSize = 15;
-    private float endTextSize = 200;
+    private float endTextSize = 100;
     private long animationDuration = 5000;
-    private ArrayList<ValueAnimator> animators;
+    private ValueAnimator animator;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,17 +46,13 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         editText = findViewById(R.id.text);
+        editText.setTextSize(initTextSize);
 
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String text = editText.getText().toString();
-                editText.setText("");
-                mList = TextProcess.process(text, maxChars);
-                initRecyclerView(mList);
-                adapter.notifyDataSetChanged();
-                recyclerView.scrollToPosition(mList.size() - 1);
+                sendMessage(editText.getTextSize());
             }
         });
         fab.setLongClickable(true);
@@ -66,13 +60,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public boolean onLongClick(View v) {
                 isLongPressed = true;
-                animators = new ArrayList<>();
-                for(int i = 0; i < recyclerView.getChildCount(); i++) {
-                    View view = recyclerView.getChildAt(i);
-                    TextView tv = view.findViewById(R.id.text);
-                    onLongPress(tv);
-                }
-                adapter.notifyDataSetChanged();
+                onLongPress();
                 return true;
             }
         });
@@ -81,11 +69,8 @@ public class MainActivity extends AppCompatActivity {
             public boolean onTouch(View v, MotionEvent event) {
                 if(event.getAction() == MotionEvent.ACTION_UP) {
                     if(isLongPressed) {
-                        for(int i = 0; i < recyclerView.getChildCount(); i++) {
-                            View view = recyclerView.getChildAt(i);
-                            TextView tv = view.findViewById(R.id.text);
-                            onLongPressStopped(i);
-                        }
+                        onLongPressStopped();
+                        sendMessage(editText.getTextSize());
                         isLongPressed = false;
                     }
                 }
@@ -94,9 +79,9 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void initRecyclerView(ArrayList<String> mList) {
+    private void initRecyclerView(ArrayList<String> mList, float tSize) {
         linearLayoutManager = new LinearLayoutManager(this);
-        adapter = new TextRecyclerAdapter(mList, this, initTextSize);
+        adapter = new TextRecyclerAdapter(mList, this, tSize);
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -128,8 +113,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onPause() {
         super.onPause();
         SharedPreferences.Editor sp = this.getPreferences(Context.MODE_PRIVATE).edit();
-        Gson gson = new Gson();
-        sp.putString(MY_LIST, gson.toJson(mList));
+        sp.putString(MY_LIST, editText.getText().toString());
         sp.apply();
     }
 
@@ -137,38 +121,36 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         SharedPreferences sp = this.getPreferences(Context.MODE_PRIVATE);
-        Gson gson = new Gson();
         String res = sp.getString(MY_LIST, "");
-        if(res.equals("")) {
-            return;
-        }
-        String[]  vals = gson.fromJson(res, String[].class);
-        mList = new ArrayList<>();
-        for(String s : vals) {
-            mList.add(s);
-        }
-        initRecyclerView(mList);
-        adapter.notifyDataSetChanged();
-        recyclerView.scrollToPosition(mList.size() - 1);
+        editText.setText(res);
     }
-    public void onLongPress(final TextView text) {
+    public void onLongPress() {
         final float start = initTextSize;
         float end = endTextSize;
-        ValueAnimator animator = ValueAnimator.ofFloat(start, end);
+        animator = ValueAnimator.ofFloat(start, end);
         animator.setDuration(animationDuration);
         animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
             @Override
             public void onAnimationUpdate(ValueAnimator animation) {
                 float animatedValue = (float) animation.getAnimatedValue();
-                text.setTextSize(animatedValue);
+                editText.setTextSize(animatedValue);
             }
         });
         animator.start();
-        animators.add(animator);
     }
-    public void onLongPressStopped(int index) {
-        if(animators.get(index) != null) {
-            animators.get(index).cancel();
+    public void onLongPressStopped() {
+        if(animator != null) {
+            animator.cancel();
         }
+    }
+
+    public void sendMessage(float tSize) {
+        String text = editText.getText().toString();
+        editText.setText("");
+        editText.setTextSize(initTextSize);
+        mList = TextProcess.process(text, maxChars);
+        initRecyclerView(mList, tSize);
+        adapter.notifyDataSetChanged();
+        recyclerView.scrollToPosition(mList.size() - 1);
     }
 }

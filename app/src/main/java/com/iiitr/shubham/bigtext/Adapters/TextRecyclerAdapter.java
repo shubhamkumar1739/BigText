@@ -3,6 +3,7 @@ package com.iiitr.shubham.bigtext.Adapters;
 import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -50,7 +51,7 @@ public class TextRecyclerAdapter extends RecyclerView.Adapter {
         }
         public void bind(String s, int position) {
             text.setText(s);
-            text.setTextSize(initTextSize);
+            text.setTextSize(TypedValue.COMPLEX_UNIT_PX, initTextSize);
             textPosition.setText("" + position + "/" + getItemCount());
         }
 
