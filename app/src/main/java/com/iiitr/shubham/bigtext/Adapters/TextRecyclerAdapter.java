@@ -1,5 +1,7 @@
 package com.iiitr.shubham.bigtext.Adapters;
 
+import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -16,9 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 public class TextRecyclerAdapter extends RecyclerView.Adapter {
     ArrayList<String> mList;
     Context mContext;
-    public TextRecyclerAdapter(ArrayList<String> mList, Context mContext) {
+    float initTextSize;
+    public TextRecyclerAdapter(ArrayList<String> mList, Context mContext, float initTextSize) {
         this.mList = mList;
         this.mContext = mContext;
+        this.initTextSize = initTextSize;
     }
     @NonNull
     @Override
@@ -46,7 +50,9 @@ public class TextRecyclerAdapter extends RecyclerView.Adapter {
         }
         public void bind(String s, int position) {
             text.setText(s);
+            text.setTextSize(initTextSize);
             textPosition.setText("" + position + "/" + getItemCount());
         }
+
     }
 }

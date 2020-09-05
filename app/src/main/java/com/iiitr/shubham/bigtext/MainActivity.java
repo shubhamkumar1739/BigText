@@ -1,5 +1,6 @@
 package com.iiitr.shubham.bigtext;
 
+import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -15,10 +16,13 @@ import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.EditText;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import java.util.ArrayList;
 
@@ -30,6 +34,11 @@ public class MainActivity extends AppCompatActivity {
     private EditText editText;
     private final int maxChars = 40;
     private String MY_LIST = "MY_LIST";
+    private boolean isLongPressed = false;
+    private float initTextSize = 15;
+    private float endTextSize = 200;
+    private long animationDuration = 5000;
+    private ArrayList<ValueAnimator> animators;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,11 +61,42 @@ public class MainActivity extends AppCompatActivity {
                 recyclerView.scrollToPosition(mList.size() - 1);
             }
         });
+        fab.setLongClickable(true);
+        fab.setOnLongClickListener(new View.OnLongClickListener() {
+            @Override
+            public boolean onLongClick(View v) {
+                isLongPressed = true;
+                animators = new ArrayList<>();
+                for(int i = 0; i < recyclerView.getChildCount(); i++) {
+                    View view = recyclerView.getChildAt(i);
+                    TextView tv = view.findViewById(R.id.text);
+                    onLongPress(tv);
+                }
+                adapter.notifyDataSetChanged();
+                return true;
+            }
+        });
+        fab.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if(event.getAction() == MotionEvent.ACTION_UP) {
+                    if(isLongPressed) {
+                        for(int i = 0; i < recyclerView.getChildCount(); i++) {
+                            View view = recyclerView.getChildAt(i);
+                            TextView tv = view.findViewById(R.id.text);
+                            onLongPressStopped(i);
+                        }
+                        isLongPressed = false;
+                    }
+                }
+                return false;
+            }
+        });
     }
 
     private void initRecyclerView(ArrayList<String> mList) {
         linearLayoutManager = new LinearLayoutManager(this);
-        adapter = new TextRecyclerAdapter(mList, this);
+        adapter = new TextRecyclerAdapter(mList, this, initTextSize);
         recyclerView = findViewById(R.id.recyclerView);
         recyclerView.setAdapter(adapter);
         recyclerView.setLayoutManager(linearLayoutManager);
@@ -110,5 +150,25 @@ public class MainActivity extends AppCompatActivity {
         initRecyclerView(mList);
         adapter.notifyDataSetChanged();
         recyclerView.scrollToPosition(mList.size() - 1);
+    }
+    public void onLongPress(final TextView text) {
+        final float start = initTextSize;
+        float end = endTextSize;
+        ValueAnimator animator = ValueAnimator.ofFloat(start, end);
+        animator.setDuration(animationDuration);
+        animator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
+            @Override
+            public void onAnimationUpdate(ValueAnimator animation) {
+                float animatedValue = (float) animation.getAnimatedValue();
+                text.setTextSize(animatedValue);
+            }
+        });
+        animator.start();
+        animators.add(animator);
+    }
+    public void onLongPressStopped(int index) {
+        if(animators.get(index) != null) {
+            animators.get(index).cancel();
+        }
     }
 }
