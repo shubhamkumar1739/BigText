@@ -1,9 +1,12 @@
 package com.iiitr.shubham.bigtext;
 
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.gson.Gson;
 import com.iiitr.shubham.bigtext.Adapters.TextRecyclerAdapter;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -26,6 +29,7 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<String> mList;
     private EditText editText;
     private final int maxChars = 40;
+    private String MY_LIST = "MY_LIST";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,5 +82,33 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        SharedPreferences.Editor sp = this.getPreferences(Context.MODE_PRIVATE).edit();
+        Gson gson = new Gson();
+        sp.putString(MY_LIST, gson.toJson(mList));
+        sp.apply();
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences sp = this.getPreferences(Context.MODE_PRIVATE);
+        Gson gson = new Gson();
+        String res = sp.getString(MY_LIST, "");
+        if(res.equals("")) {
+            return;
+        }
+        String[]  vals = gson.fromJson(res, String[].class);
+        mList = new ArrayList<>();
+        for(String s : vals) {
+            mList.add(s);
+        }
+        initRecyclerView(mList);
+        adapter.notifyDataSetChanged();
+        recyclerView.scrollToPosition(mList.size() - 1);
     }
 }
