@@ -9,7 +9,7 @@ The data persists even when the app is closed.
 
 Part 2 :
 
-ConcurrentModificationError is thrown when two threads try to modify the same data structure. It generally occurs in the Collections of Java. For example, in the situation presented here, an ArrayList is throwing the error. An attempt to modify the arraylist while iterating over it using an iterator might have been made.
+ConcurrentModificationException is thrown when two threads try to modify the same data structure. It generally occurs in the Collections of Java. For example, in the situation presented here, an ArrayList is throwing the error. An attempt to modify the arraylist while iterating over it using an iterator might have been made.
 
 The problem has two solutions :
 1. If the case is of a remove operation, the iterator has a function to remove the element. When that function is used, there won't be an error.
